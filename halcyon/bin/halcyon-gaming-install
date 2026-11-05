@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# The install half of halcyon-gaming, run in a terminal. Arguments: component ids.
+# Steam, Lutris and Heroic go through Omarchy's own installers, which pick the
+# graphics libraries for this machine.
+
+set -e
+
+flatpaks=()
+
+for component in "$@"; do
+  case $component in
+    steam) omarchy-install-gaming-steam ;;
+    lutris) omarchy-install-gaming-lutris ;;
+    heroic) omarchy-install-gaming-heroic ;;
+    gamemode)
+      omarchy-install-gaming-gpu-lib32
+      omarchy-pkg-add gamemode lib32-gamemode
+      sudo usermod -aG gamemode "$USER"
+      ;;
+    mangohud)
+      omarchy-install-gaming-gpu-lib32
+      omarchy-pkg-add mangohud lib32-mangohud goverlay
+      ;;
+    wine) omarchy-pkg-add wine winetricks wine-mono wine-gecko ;;
+    gamescope) omarchy-pkg-add gamescope ;;
+    prism) omarchy-pkg-add prismlauncher ;;
+    protonup) flatpaks+=(net.davidotek.pupgui2) ;;
+    vesktop) flatpaks+=(dev.vencord.Vesktop) ;;
+    *) echo "Unknown component: $component" >&2 ;;
+  esac
+done
+
+if (( ${#flatpaks[@]} )); then
+  omarchy-pkg-add flatpak
+  flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  flatpak install --user -y --noninteractive flathub "${flatpaks[@]}"
+fi

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Halcyon on-screen keyboard: halcyon-osk [show|hide|toggle]; Guide + X on a gamepad.
+apps=$(dirname "$(readlink -f "$0")")/../apps
+PYTHONPATH=$apps/games exec python3 -m halcyon_games.osk "$@"

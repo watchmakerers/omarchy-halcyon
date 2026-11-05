@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Halcyon Gaming Setup: tick what you want, then install it all in one go.
+
+title="Halcyon Gaming Setup"
+
+mapfile -t picked < <(halcyon-dialog --title "$title" --checklist "Choose what to install. You can run this again any time." -- \
+  steam "Steam (with Proton)" on \
+  gamemode "GameMode: CPU/GPU performance boost while gaming" on \
+  mangohud "MangoHud + GOverlay: FPS / temperature overlay" on \
+  wine "Wine + Winetricks: run Windows games and apps" on \
+  lutris "Lutris: one place for GOG, Epic, emulators, installers" on \
+  heroic "Heroic Games Launcher: Epic, GOG, Amazon" on \
+  protonup "ProtonUp-Qt: install Proton-GE and friends (Flatpak)" on \
+  gamescope "Gamescope: Steam Deck-style game compositor" off \
+  vesktop "Vesktop: Discord with Vencord, screen share with audio (Flatpak)" off \
+  prism "Prism Launcher: Minecraft" off)
+
+(( ${#picked[@]} )) || exit 0
+
+halcyon-dialog --title "$title" --yes-label "Install" --yesno "Install ${#picked[@]} component(s)?
+
+This downloads a few GB and needs your password." || exit 0
+
+omarchy-launch-floating-terminal-with-presentation halcyon-gaming-install "${picked[*]}"

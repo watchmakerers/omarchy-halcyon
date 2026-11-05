@@ -10,7 +10,7 @@ test_tmp=$(mktemp -d)
 trap 'rm -rf -- "$test_tmp"' EXIT
 
 mkdir -p "$test_tmp/home" "$test_tmp/stubs"
-for stub in omarchy-pkg-add curl update-desktop-database; do
+for stub in omarchy-pkg-add curl update-desktop-database sudo; do
   printf '#!/bin/bash\n[[ $0 == *curl ]] && exit 1\nexit 0\n' >"$test_tmp/stubs/$stub"
   chmod +x "$test_tmp/stubs/$stub"
 done
@@ -26,7 +26,7 @@ grep -q "without Flash" "$test_tmp/err" &&
   fail "a failed Ruffle download is reported"
 
 HOME="$test_tmp/home" PATH="$test_tmp/stubs:$PATH" "$ROOT/bin/omarchy-install-halcyon-apps" >/dev/null 2>&1
-(( $(grep -c "halcyon-calendar" "$test_tmp/home/.config/hypr/autostart.lua") == 1 )) &&
+(( $(grep -c "halcyon-osk --daemon" "$test_tmp/home/.config/hypr/autostart.lua") == 1 )) &&
   pass "installing twice adds the autostart entries once" ||
   fail "installing twice adds the autostart entries once"
 
@@ -39,7 +39,7 @@ done
   pass "every Halcyon desktop entry has an installed launcher" ||
   fail "every Halcyon desktop entry has an installed launcher"
 
-if grep -rEnI 'plasma-|kioclient|kdialog|qdbus|systemsettings|kwriteconfig|konsole' "$ROOT/halcyon/apps" "$ROOT/halcyon/bin"; then
+if grep -rEnI 'plasma-|kioclient|kdialog|qdbus|systemsettings|kwriteconfig|kreadconfig|konsole' "$ROOT/halcyon/apps" "$ROOT/halcyon/bin" "$ROOT/halcyon/lib" "$ROOT/halcyon/applications"; then
   fail "Halcyon apps do not call KDE tools"
 else
   pass "Halcyon apps do not call KDE tools"

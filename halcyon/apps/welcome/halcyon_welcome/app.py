@@ -167,10 +167,6 @@ def check_sgdb(key):
 def tasks():
     """(id, icon, title, description, [(button label, command or callable name)], section)."""
     nv = has_nvidia()
-    gpu_note = ""
-    if nv and not nvidia_driver_loaded():
-        gpu_note = (" <b>This computer has an NVIDIA graphics card without its driver yet</b> - tick "
-                    "\"NVIDIA driver\" in Gaming Setup for full speed in games.")
     t = []
     if LIVE:
         t.append(("install", "system-software-install", "Install Halcyon",
@@ -186,8 +182,7 @@ def tasks():
          [("Desktop background", ["omarchy-theme-bg-switcher"]), ("Theme", ["omarchy-theme-switcher"])],
          "start"),
         ("gaming", "input-gaming", "Set up gaming",
-         "Install Steam, Wine for Windows games, Lutris, Heroic, MangoHud, GameMode, the NVIDIA driver and "
-         "more, all at once." + gpu_note, [("Open Gaming Setup", ["halcyon-gaming"])], "start"),
+         "Install Steam, Wine for Windows games, Lutris, Heroic, MangoHud, GameMode and more, all at once.", [("Open Gaming Setup", ["halcyon-gaming"])], "start"),
         ("artwork", "folder-pictures", "Get game artwork",
          "Halcyon Games and its full-screen Big Picture view can fetch box art, banners and logos for every "
          "game from SteamGridDB. Make a free account at steamgriddb.com, open <i>Preferences → API</i>, and "

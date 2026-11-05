@@ -1,5 +1,9 @@
+7zip
 adobe-source-sans-fonts
+cabextract
 ffmpeg
+icoutils
+msitools
 oxygen-icons
 pyside6
 python-evdev
@@ -9,4 +13,5 @@ qt6-imageformats
 qt6-multimedia
 qt6-multimedia-ffmpeg
 qt6-webengine
+udisks2
 xorg-xwayland

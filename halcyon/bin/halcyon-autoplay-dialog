@@ -1,0 +1,55 @@
+#!/bin/bash
+# halcyon-autoplay-dialog <kind> <title> <mountpoint> <device>
+# Shows the AutoPlay chooser; prints "<action>|always" or "<action>|once".
+# halcyon-autoplay-dialog --reset forgets every "always do this" choice.
+set -uo pipefail
+
+if [[ ${1:-} == --reset ]]; then
+    rm -f "${XDG_CONFIG_HOME:-$HOME/.config}/halcyon/autoplay.conf"
+    omarchy-notification-send "AutoPlay" "AutoPlay will ask again."
+    exit 0
+fi
+
+kind=$1 title=$2 mp=${3:-} dev=${4:-}
+
+opts=()  # id \t icon \t label \t description
+add() { opts+=("$1"$'\t'"$2"$'\t'"$3"$'\t'"$4"); }
+case $kind in
+    windows)
+        add install  system-software-install "Install or run program" "Runs the disc's setup, just like on Windows"
+        add browse   folder-open             "Open folder to view files" "Using Files"
+        what="software and game discs" ;;
+    dos)
+        add dosbox   applications-games      "Run in DOSBox" "For MS-DOS games and programs"
+        add browse   folder-open             "Open folder to view files" "Using Files"
+        what="MS-DOS discs" ;;
+    audio)
+        add play-cd  media-optical-audio     "Play audio CD" "Using Halcyon Media Player"
+        add rip-cd   media-optical-audio     "Rip music from CD" "Copy tracks to your Music folder (FLAC, MP3 or Opus)"
+        what="audio CDs" ;;
+    dvdvideo)
+        add play-dvd media-optical-dvd-video "Play DVD movie" "Using VLC"
+        add browse   folder-open             "Open folder to view files" "Using Files"
+        what="DVD movies" ;;
+    bluray)
+        add play-bd  media-optical-blu-ray   "Play Blu-ray movie" "Using VLC (unencrypted discs only)"
+        add browse   folder-open             "Open folder to view files" "Using Files"
+        what="Blu-ray movies" ;;
+    blank)
+        add burn     media-optical-recordable "Burn files to disc" "Using K3b"
+        what="blank discs" ;;
+    *)
+        add browse   folder-open             "Open folder to view files" "Using Files"
+        add install  system-run              "Run a program from this disc" "Pick a setup or game program"
+        what="data discs" ;;
+esac
+add nothing dialog-cancel "Take no action" ""
+
+# Use the disc's own icon (autorun.inf "icon="), like Windows did.
+here=$(dirname "$(readlink -f "$0")")
+source "$here/../lib/disc-lib.sh"
+icon=media-optical
+png=${XDG_RUNTIME_DIR:-/tmp}/halcyon-disc-icon.png
+[[ -n $mp ]] && disc_icon_png "$mp" "$png" && icon=file://$png
+
+printf '%s\n' "${opts[@]}" | halcyon-dialog --title "AutoPlay" --autoplay -- "$title" "$what" "$icon"

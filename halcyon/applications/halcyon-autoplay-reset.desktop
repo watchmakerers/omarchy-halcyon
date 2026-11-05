@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Reset AutoPlay Choices
+Comment=Forget "Always do this" choices for inserted discs
+Exec=halcyon-autoplay-dialog --reset
+Icon=media-optical
+Categories=Settings;

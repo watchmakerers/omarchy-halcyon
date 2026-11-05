@@ -13,6 +13,8 @@ applications_dir="$data_home/applications"
 
 ruffle_version=0.7.1
 ruffle_sha256=dc9e7407549a91accc41a14932b0b9d9a9d51a3742ce6f020888c8a76682b157
+otvdm_version=0.9.0
+otvdm_sha256=842b11aed5fa81f3e1d4272e0ee7d37f1a5a8f936de825309dda672835e16fd4
 
 # Flash support for Halcyon Navigator. The browser still works without it.
 install_ruffle() {
@@ -31,20 +33,44 @@ install_ruffle() {
   rm -rf -- "$tmp"
 }
 
-# Calendar reminders and sticky notes come back at login. The block goes in the
-# user's own autostart file, which Omarchy leaves alone on update.
+# 16-bit Windows setup programs on old discs. Newer discs work without it.
+install_otvdm() {
+  local tmp
+  tmp=$(mktemp -d)
+
+  if curl -fsSL -o "$tmp/otvdm.zip" "https://github.com/otya128/winevdm/releases/download/v$otvdm_version/otvdm-v$otvdm_version.zip" &&
+    echo "$otvdm_sha256  $tmp/otvdm.zip" | sha256sum --check --status; then
+    mkdir -p "$install_dir/otvdm"
+    bsdtar -xf "$tmp/otvdm.zip" -C "$install_dir/otvdm" --strip-components=1
+  else
+    echo "Could not download otvdm, so very old Windows discs may not install." >&2
+  fi
+
+  rm -rf -- "$tmp"
+}
+
+# The on-screen keyboard types through /dev/uinput, which the logged-in user needs access to.
+install_uinput_access() {
+  sudo install -Dm644 "$install_dir/udev/70-halcyon-uinput.rules" /etc/udev/rules.d/70-halcyon-uinput.rules
+  sudo install -Dm644 "$install_dir/udev/halcyon-uinput.conf" /etc/modules-load.d/halcyon-uinput.conf
+  sudo modprobe uinput
+  sudo udevadm control --reload
+  sudo udevadm trigger --name-match=uinput
+}
+
+# Reminders, sticky notes, disc watching and the on-screen keyboard start at login.
+# They go in the user's own autostart file, which Omarchy leaves alone on update.
 add_autostart() {
   local autostart="$HOME/.config/hypr/autostart.lua"
 
-  mkdir -p "$(dirname "$autostart")"
-  if ! grep -qs "halcyon-calendar" "$autostart"; then
-    cat >>"$autostart" <<'LUA'
+  local entry
 
--- Halcyon apps
-o.launch_on_start(os.getenv("HOME") .. "/.local/bin/halcyon-calendar --daemon")
-o.launch_on_start(os.getenv("HOME") .. "/.local/bin/halcyon-notes --restore")
-LUA
-  fi
+  mkdir -p "$(dirname "$autostart")"
+  for entry in "halcyon-calendar --daemon" "halcyon-notes --restore" "halcyon-autoplay-daemon" "halcyon-osk --daemon"; do
+    if ! grep -qsF "$entry" "$autostart"; then
+      echo "o.launch_on_start(os.getenv(\"HOME\") .. \"/.local/bin/$entry\")" >>"$autostart"
+    fi
+  done
 }
 
 mapfile -t packages <"$source_dir/packages.txt"
@@ -54,6 +80,8 @@ mkdir -p "$data_home" "$bin_dir" "$applications_dir"
 rm -rf -- "$install_dir"
 cp -r "$source_dir" "$install_dir"
 install_ruffle
+install_otvdm
+install_uinput_access
 add_autostart
 
 for launcher in "$install_dir"/bin/halcyon-*; do
