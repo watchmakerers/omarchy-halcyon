@@ -1,0 +1,4 @@
+#!/bin/bash
+
+apps=$(dirname "$(readlink -f "$0")")/../apps
+PYTHONPATH=$apps/photos exec python3 -m halcyon_photos.app "$@"

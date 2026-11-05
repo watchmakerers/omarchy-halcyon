@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# omarchy:summary=Install the Halcyon apps (games, mail, photos, media and more) for this user
+# omarchy:requires-sudo=true
+
+set -euo pipefail
+
+source_dir="$OMARCHY_PATH/halcyon"
+data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+install_dir="$data_home/omarchy-halcyon"
+bin_dir="$HOME/.local/bin"
+applications_dir="$data_home/applications"
+
+ruffle_version=0.7.1
+ruffle_sha256=dc9e7407549a91accc41a14932b0b9d9a9d51a3742ce6f020888c8a76682b157
+
+# Flash support for Halcyon Navigator. The browser still works without it.
+install_ruffle() {
+  local tmp
+  tmp=$(mktemp -d)
+
+  if curl -fsSL -o "$tmp/ruffle.tgz" "https://registry.npmjs.org/@ruffle-rs/ruffle/-/ruffle-$ruffle_version.tgz" &&
+    echo "$ruffle_sha256  $tmp/ruffle.tgz" | sha256sum --check --status; then
+    mkdir -p "$install_dir/apps/retro/ruffle"
+    tar -xzf "$tmp/ruffle.tgz" -C "$install_dir/apps/retro/ruffle" --strip-components=1 --wildcards \
+      package/ruffle.js 'package/core.ruffle.*.js' 'package/*.wasm' package/LICENSE_MIT package/LICENSE_APACHE
+  else
+    echo "Could not download Ruffle, so Halcyon Navigator will run without Flash." >&2
+  fi
+
+  rm -rf -- "$tmp"
+}
+
+# Calendar reminders and sticky notes come back at login. The block goes in the
+# user's own autostart file, which Omarchy leaves alone on update.
+add_autostart() {
+  local autostart="$HOME/.config/hypr/autostart.lua"
+
+  mkdir -p "$(dirname "$autostart")"
+  if ! grep -qs "halcyon-calendar" "$autostart"; then
+    cat >>"$autostart" <<'LUA'
+
+-- Halcyon apps
+o.launch_on_start(os.getenv("HOME") .. "/.local/bin/halcyon-calendar --daemon")
+o.launch_on_start(os.getenv("HOME") .. "/.local/bin/halcyon-notes --restore")
+LUA
+  fi
+}
+
+mapfile -t packages <"$source_dir/packages.txt"
+omarchy-pkg-add "${packages[@]}"
+
+mkdir -p "$data_home" "$bin_dir" "$applications_dir"
+rm -rf -- "$install_dir"
+cp -r "$source_dir" "$install_dir"
+install_ruffle
+add_autostart
+
+for launcher in "$install_dir"/bin/halcyon-*; do
+  ln -sfn "$launcher" "$bin_dir/$(basename "$launcher")"
+done
+
+cp "$install_dir"/applications/*.desktop "$applications_dir/"
+install -Dm644 "$install_dir/assets/logo.png" "$data_home/icons/hicolor/512x512/apps/halcyon-logo.png"
+
+if omarchy-cmd-present update-desktop-database; then
+  update-desktop-database "$applications_dir" >/dev/null 2>&1 || true
+fi
+
+echo "Halcyon apps installed. Find them in the app launcher, or start with halcyon-welcome."

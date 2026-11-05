@@ -1,0 +1,5 @@
+#!/bin/bash
+
+apps=$(dirname "$(readlink -f "$0")")/../apps
+export HALCYON_GADGETS_DIR=$apps/gadgets/builtin
+PYTHONPATH=$apps/gadgets exec python3 -m halcyon_gadgets.host "$@"

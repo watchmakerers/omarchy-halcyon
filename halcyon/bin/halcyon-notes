@@ -1,0 +1,6 @@
+#!/bin/bash
+
+apps=$(dirname "$(readlink -f "$0")")/../apps
+# Notes reopen where you left them, which Wayland doesn't allow.
+export QT_QPA_PLATFORM="xcb;wayland"
+PYTHONPATH=$apps/notes exec python3 -m halcyon_notes.app "$@"

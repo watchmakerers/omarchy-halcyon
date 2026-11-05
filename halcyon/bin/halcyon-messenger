@@ -1,0 +1,6 @@
+#!/bin/bash
+
+apps=$(dirname "$(readlink -f "$0")")/../apps
+# Sign-in popups need the screen corner, which Wayland doesn't allow.
+export QT_QPA_PLATFORM="xcb;wayland"
+PYTHONPATH=$apps/messenger exec python3 -m halcyon_messenger.app "$@"
