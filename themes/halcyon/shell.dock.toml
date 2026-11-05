@@ -1,0 +1,6 @@
+background       = "#123a5c"
+background-alpha = 1.0
+sheen            = "#56768c"
+sheen-alpha      = 1.0
+border           = "#2ac0f0"
+border-alpha     = 0.6
