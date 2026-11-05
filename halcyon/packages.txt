@@ -3,6 +3,7 @@ ffmpeg
 oxygen-icons
 pyside6
 python-evdev
+python-mpv
 python-mutagen
 qt6-imageformats
 qt6-multimedia

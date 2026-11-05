@@ -768,6 +768,7 @@ def main(argv=None):
         sys.exit(library.main())
     app = QApplication(sys.argv[:1])
     app.setApplicationName("Halcyon Media Player")
+    app.setDesktopFileName("halcyon-player")
     app.jellyfin = Jellyfin()
     app.plex = Plex()
     player = Player()
