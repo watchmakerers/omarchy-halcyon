@@ -81,6 +81,13 @@ QtObject {
     property color text: root.pick("bar.text", root.foreground)
     property color active: root.pick("bar.active", root.urgent)
   }
+  // The shelf behind the dock's icons. Themes opt in with shell.dock.toml; without
+  // it the background stays transparent and no shelf is drawn.
+  readonly property QtObject dock: QtObject {
+    property color background: root.composed("dock.background", "dock.background-alpha", "transparent", 0)
+    property color sheen: root.composed("dock.sheen", "dock.sheen-alpha", "transparent", 0)
+    property color border: root.composed("dock.border", "dock.border-alpha", "transparent", 0)
+  }
   readonly property QtObject popups: QtObject {
     property color background: root.composed("popups.background", "popups.background-alpha", root.background, 1.0)
     property color text: root.pick("popups.text", root.foreground)

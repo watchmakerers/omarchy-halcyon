@@ -183,6 +183,10 @@ one section by shipping `shell.<section>.toml`. For example,
 `shell.lock.toml` replaces only the `[lock]` section after the default
 `shell.toml` has been generated:
 
+A theme can give the dock a shelf with `shell.dock.toml`, setting `background`, `sheen` and `border`, each with its `-alpha` (a missing alpha leaves that part invisible). Without it the dock's icons sit straight on the desktop.
+
+A first-party theme can restyle floating workspaces with `floating.lua`, returning `rounding`, `shadow`, `titlebar` (options for the titlebar plugin) and `buttons` (`close`, `maximize` and `minimize`, each with `bg_color`, `fg_color` and `size`). Like every `*.lua`, it is dropped from themes installed from a git repo.
+
 ```toml
 text        = "#ffffff"
 placeholder = "#ffffff"

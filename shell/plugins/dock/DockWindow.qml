@@ -296,6 +296,23 @@ PanelWindow {
     // frame back instead of being uploaded again.
     opacity: window.shown ? 1 : 0
 
+    Rectangle {
+      readonly property int padding: Style.spacing.sm
+
+      anchors.fill: parent
+      anchors.margins: -padding
+      z: -1
+      visible: Commons.Color.dock.background.a > 0
+      radius: Style.cornerRadius + padding
+      border.width: 1
+      border.color: Commons.Color.dock.border
+      gradient: Gradient {
+        GradientStop { position: 0.0; color: Commons.Color.dock.sheen }
+        GradientStop { position: 0.48; color: Commons.Color.dock.background }
+        GradientStop { position: 1.0; color: Qt.darker(Commons.Color.dock.background, 1.25) }
+      }
+    }
+
     HoverHandler {
       id: bodyHover
       onHoveredChanged: if (!hovered && window.autohide) hideTimer.restart()

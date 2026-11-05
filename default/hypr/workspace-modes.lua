@@ -443,6 +443,16 @@ local function theme_colors()
   }
 end
 
+-- A first-party theme can restyle floating windows with a floating.lua returning
+-- { rounding, shadow, titlebar, buttons }. Installed themes can't ship Lua, so
+-- this only ever runs Omarchy's own code or a theme the user wrote.
+local function theme_floating()
+  local chunk = loadfile(paths.home .. "/.local/state/omarchy/current/theme/floating.lua")
+  local ok, style = pcall(chunk or function() end)
+
+  return ok and type(style) == "table" and style or {}
+end
+
 -- Titlebars come from omarchy-hyprland-titlebars, loaded once something floats.
 -- The plugin reloads the config once it is in, which is the pass that finds its
 -- options here. Its options reset on every load, so it draws nothing until enabled.
@@ -467,43 +477,47 @@ local function titlebars()
   end
 
   local colors = theme_colors()
+  local style = theme_floating()
   local window = [[window = "address:%WINDOW%"]]
+  local hyprbars = {
+    enabled = true,
+    workspace_tag = WORKSPACE_TAG,
+    bar_height = 30,
+    bar_color = colors.titlebar,
+    col = { text = colors.foreground },
+    bar_text_font = "monospace",
+    bar_text_size = 12,
+    bar_text_weight = "normal",
+    bar_text_align = "left",
+    bar_buttons_alignment = "right",
+    bar_part_of_window = true,
+    bar_precedence_over_border = true,
+    bar_padding = 10,
+    bar_button_padding = 8,
+    button_rounding = 0,
+    icon_on_hover = false,
+    inactive_button_color = colors.titlebar,
+    on_double_click = "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", " .. window .. " })'",
+  }
 
-  hl.config({
-    plugin = {
-      hyprbars = {
-        enabled = true,
-        workspace_tag = WORKSPACE_TAG,
-        bar_height = 30,
-        bar_color = colors.titlebar,
-        col = { text = colors.foreground },
-        bar_text_font = "monospace",
-        bar_text_size = 12,
-        bar_text_weight = "normal",
-        bar_text_align = "left",
-        bar_buttons_alignment = "right",
-        bar_part_of_window = true,
-        bar_precedence_over_border = true,
-        bar_padding = 10,
-        bar_button_padding = 8,
-        button_rounding = 0,
-        icon_on_hover = false,
-        inactive_button_color = colors.titlebar,
-        on_double_click = "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", " .. window .. " })'",
-      },
-    },
-  })
+  for option, value in pairs(style.titlebar or {}) do
+    hyprbars[option] = value
+  end
+
+  hl.config({ plugin = { hyprbars = hyprbars } })
 
   for _, button in ipairs({
-    { icon = "×", action = "hyprctl dispatch 'hl.dsp.window.close({ " .. window .. " })'" },
-    { icon = "□", action = "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", " .. window .. " })'" },
+    { name = "close", icon = "×", action = "hyprctl dispatch 'hl.dsp.window.close({ " .. window .. " })'" },
+    { name = "maximize", icon = "□", action = "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", " .. window .. " })'" },
     -- Minimized windows wait in the dock, which brings them back.
-    { icon = "−", action = "omarchy-hyprland-window-minimize %WINDOW%" },
+    { name = "minimize", icon = "−", action = "omarchy-hyprland-window-minimize %WINDOW%" },
   }) do
+    local look = (style.buttons or {})[button.name] or {}
+
     hl.plugin.hyprbars.add_button({
-      bg_color = colors.titlebar,
-      fg_color = colors.foreground,
-      size = 20,
+      bg_color = look.bg_color or colors.titlebar,
+      fg_color = look.fg_color or colors.foreground,
+      size = look.size or 20,
       icon = button.icon,
       action = button.action,
     })
@@ -566,6 +580,14 @@ set_up_floating = function()
   end
 
   o.window({ tag = WORKSPACE_TAG }, { opacity = "1.0 override 1.0 override" })
+
+  local style = theme_floating()
+  if style.rounding then
+    o.window({ tag = WORKSPACE_TAG }, { rounding = style.rounding })
+  end
+  if style.shadow then
+    hl.config({ decoration = { shadow = style.shadow } })
+  end
 
   titlebars()
 end
